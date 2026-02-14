@@ -12,7 +12,11 @@
     "build:dir": "electron-builder --win --dir",
     "pack": "electron-builder --win portable"
   },
-  "author": "Oh My OpenCode",
+  "author": {
+    "name": "sjkncs",
+    "email": "sjkncs@users.noreply.github.com"
+  },
+  "homepage": "https://github.com/sjkncs/oh-my-opencode-dev",
   "license": "MIT",
   "devDependencies": {
     "electron": "^40.4.1",
