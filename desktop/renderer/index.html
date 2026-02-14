@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oh My OpenCode</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- ═══ Title Bar ═══ -->
+  <div class="titlebar" id="titlebar">
+    <div class="titlebar-drag">
+      <div class="titlebar-logo">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+        </svg>
+        <span>Oh My OpenCode</span>
+      </div>
+      <!-- Model Selector -->
+      <div class="model-selector" id="modelSelector">
+        <button class="model-selector-btn" id="modelSelectorBtn" title="选择模型">
+          <span id="currentModel">GPT-4o</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="model-dropdown" id="modelDropdown">
+          <div class="model-option active" data-model="GPT-4o">GPT-4o</div>
+          <div class="model-option" data-model="GPT-4o-mini">GPT-4o-mini</div>
+          <div class="model-option" data-model="Claude-3.5-Sonnet">Claude 3.5 Sonnet</div>
+          <div class="model-option" data-model="Claude-3-Opus">Claude 3 Opus</div>
+          <div class="model-option" data-model="DeepSeek-V3">DeepSeek V3</div>
+          <div class="model-option" data-model="Qwen-Max">Qwen Max</div>
+          <div class="model-option" data-model="Gemini-Pro">Gemini Pro</div>
+        </div>
+      </div>
+    </div>
+    <div class="titlebar-controls">
+      <button class="titlebar-btn pin-btn" id="pinBtn" title="置顶窗口">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 17v5"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/>
+        </svg>
+      </button>
+      <button class="titlebar-btn" id="themeBtn" title="切换主题">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="titlebar-btn" id="minimizeBtn" title="最小化">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/></svg>
+      </button>
+      <button class="titlebar-btn" id="maximizeBtn" title="最大化">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+      </button>
+      <button class="titlebar-btn close-btn" id="closeBtn" title="关闭到气泡">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="app-body">
+    <!-- ═══ Left Sidebar ═══ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <button class="new-chat-btn" id="newChatBtn" title="新建对话">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7h14"/></svg>
+          <span>新对话</span>
+        </button>
+        <button class="sidebar-icon-btn" id="searchHistoryBtn" title="搜索历史">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        </button>
+      </div>
+
+      <div class="sidebar-search hidden" id="sidebarSearch">
+        <input type="text" id="historySearchInput" placeholder="搜索对话历史..." />
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">
+          <span>对话分组</span>
+          <button class="sidebar-icon-btn tiny" id="addGroupBtn" title="新建分组">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7h14"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-title"><span>最近对话</span></div>
+        <div class="conversation-list" id="conversationList"></div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-footer-item" id="mySpaceBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>我的空间</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Sidebar Toggle -->
+    <button class="sidebar-toggle" id="sidebarToggle" title="收起侧栏">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg>
+    </button>
+
+    <!-- ═══ Main Chat Area ═══ -->
+    <main class="main-area">
+      <div class="chat-messages" id="chatMessages">
+        <!-- Welcome Screen -->
+        <div class="welcome-screen" id="welcomeScreen">
+          <div class="welcome-hero">
+            <h1>你好，我是 <span class="gradient-text">OpenCode</span></h1>
+            <p class="welcome-sub">AI 编程助手 · 多模型编排 · 代码分析 · 智能对话</p>
+          </div>
+
+          <!-- Quick Feature Cards -->
+          <div class="feature-cards">
+            <div class="feature-card" data-action="upload-code" title="上传代码文件进行分析">
+              <div class="feature-icon code-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              </div>
+              <span>代码分析</span>
+            </div>
+            <div class="feature-card" data-action="upload-image" title="上传图片进行识别分析">
+              <div class="feature-icon image-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              </div>
+              <span>图像识别</span>
+            </div>
+            <div class="feature-card" data-action="upload-doc" title="上传文档进行解读">
+              <div class="feature-icon doc-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              </div>
+              <span>文档解读</span>
+            </div>
+            <div class="feature-card" data-action="deep-think" title="启用深度思考模式">
+              <div class="feature-icon think-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+              </div>
+              <span>深度思考</span>
+            </div>
+            <div class="feature-card" data-action="discover" title="探索更多功能">
+              <div class="feature-icon discover-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+              </div>
+              <span>发现</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- File Preview Area (hidden by default) -->
+      <div class="file-preview-bar hidden" id="filePreviewBar">
+        <div class="file-preview-list" id="filePreviewList"></div>
+      </div>
+
+      <!-- ═══ Tool Panels (secondary UI) ═══ -->
+
+      <!-- 图像面板 -->
+      <div class="tool-panel" id="panelImage">
+        <div class="panel-header">
+          <h3>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            创意生图 · 智能修图
+          </h3>
+          <button class="panel-close" data-panel="panelImage" title="关闭">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="panel-body">
+          <div class="panel-input-row">
+            <textarea class="panel-textarea" id="imagePromptInput" placeholder="支持图像生成与编辑，快速实现创意设计" rows="1"></textarea>
+          </div>
+          <div class="panel-options">
+            <button class="panel-tag active" id="imageTagActive">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <span>图像</span>
+              <span class="tag-close" id="imageTagClose">×</span>
+            </button>
+            <button class="panel-option-btn" id="imageRefBtn" title="上传参考图">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <span>参考图</span>
+            </button>
+            <div class="panel-dropdown-wrap">
+              <button class="panel-option-btn" id="imageRatioBtn" title="选择比例">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+                <span>比例 <span id="currentRatio">1:1</span></span>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+              <div class="panel-dropdown" id="ratioDropdown">
+                <div class="ratio-option active" data-ratio="1:1">1:1 正方形</div>
+                <div class="ratio-option" data-ratio="3:4">3:4 竖版</div>
+                <div class="ratio-option" data-ratio="4:3">4:3 横版</div>
+                <div class="ratio-option" data-ratio="9:16">9:16 手机</div>
+                <div class="ratio-option" data-ratio="16:9">16:9 宽屏</div>
+              </div>
+            </div>
+            <button class="panel-send-btn" id="imageSendBtn" title="生成图像">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+          <div class="panel-tabs" id="imageGalleryTabs">
+            <button class="panel-tab active" data-tab="featured">精选</button>
+            <button class="panel-tab" data-tab="poster">海报</button>
+            <button class="panel-tab" data-tab="ecommerce">电商</button>
+            <button class="panel-tab" data-tab="portrait">人像</button>
+          </div>
+          <div class="panel-gallery" id="imageGallery">
+            <!-- 精选 featured -->
+            <div class="gallery-card" data-category="featured" data-prompt="新春快乐，喜庆中国风插画，灯笼烟花"><div class="gallery-placeholder gp-festive"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg><span>新春快乐</span></div></div>
+            <div class="gallery-card" data-category="featured" data-prompt="可爱的卡通动物角色，3D皮克斯风格渲染"><div class="gallery-placeholder gp-cartoon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><span>卡通角色</span></div></div>
+            <div class="gallery-card" data-category="featured" data-prompt="未来科技城市，赛博朋克霓虹灯光"><div class="gallery-placeholder gp-scifi"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="4" height="10" rx="1"/><rect x="10" y="6" width="4" height="15" rx="1"/><rect x="17" y="3" width="4" height="18" rx="1"/></svg><span>科幻城市</span></div></div>
+            <div class="gallery-card" data-category="featured" data-prompt="水彩风景画，日出山水意境"><div class="gallery-placeholder gp-watercolor"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17.5 19H9.5l4-7 4 7z"/><path d="M14.5 19H3.5l5.5-10 3.5 6"/><circle cx="18" cy="5" r="2.5"/></svg><span>水彩风景</span></div></div>
+            <div class="gallery-card" data-category="featured" data-prompt="Studio Ghibli 吉卜力风格动画场景"><div class="gallery-placeholder gp-ghibli"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 20c4-4 8-2 12-6s4-8 6-10"/><circle cx="8" cy="8" r="3"/><path d="M17 17l4 4"/></svg><span>吉卜力风格</span></div></div>
+            <div class="gallery-card" data-category="featured" data-prompt="像素风格游戏角色与场景"><div class="gallery-placeholder gp-pixel"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="4" height="4"/><rect x="10" y="4" width="4" height="4"/><rect x="16" y="4" width="4" height="4"/><rect x="4" y="10" width="4" height="4"/><rect x="10" y="10" width="4" height="4"/><rect x="4" y="16" width="4" height="4"/></svg><span>像素游戏</span></div></div>
+            <!-- 海报 poster -->
+            <div class="gallery-card" data-category="poster" data-prompt="电影海报设计，暗色调大气感，标题留白"><div class="gallery-placeholder gp-poster-movie"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M7 2v20"/><path d="M17 2v20"/><path d="M2 12h20"/></svg><span>电影海报</span></div></div>
+            <div class="gallery-card" data-category="poster" data-prompt="音乐节海报，迷幻色彩波浪纹理"><div class="gallery-placeholder gp-poster-music"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><span>音乐海报</span></div></div>
+            <div class="gallery-card" data-category="poster" data-prompt="科技发布会海报，深蓝渐变光效"><div class="gallery-placeholder gp-poster-tech"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><span>科技发布</span></div></div>
+            <div class="gallery-card" data-category="poster" data-prompt="美食餐厅宣传海报，暖色调特写摄影"><div class="gallery-placeholder gp-poster-food"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg><span>美食海报</span></div></div>
+            <div class="gallery-card" data-category="poster" data-prompt="旅行探索海报，风景摄影构图，文字叠加"><div class="gallery-placeholder gp-poster-travel"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10A15.3 15.3 0 0112 2z"/></svg><span>旅行海报</span></div></div>
+            <div class="gallery-card" data-category="poster" data-prompt="体育赛事海报，动感速度线条，运动员剪影"><div class="gallery-placeholder gp-poster-sport"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6.5 6.5l11 11"/><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path d="M12 3a4.5 4.5 0 000 9"/><path d="M12 21a4.5 4.5 0 010-9"/></svg><span>体育海报</span></div></div>
+            <!-- 电商 ecommerce -->
+            <div class="gallery-card" data-category="ecommerce" data-prompt="产品白底展示图，简约干净背景，专业摄影"><div class="gallery-placeholder gp-ecom-product"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg><span>产品展示</span></div></div>
+            <div class="gallery-card" data-category="ecommerce" data-prompt="双十一促销活动主图，红色喜庆风格"><div class="gallery-placeholder gp-ecom-sale"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg><span>促销主图</span></div></div>
+            <div class="gallery-card" data-category="ecommerce" data-prompt="食品零食包装展示图，45度角拍摄"><div class="gallery-placeholder gp-ecom-food"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg><span>包装展示</span></div></div>
+            <div class="gallery-card" data-category="ecommerce" data-prompt="美妆护肤品场景图，鲜花绿植点缀"><div class="gallery-placeholder gp-ecom-beauty"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>美妆场景</span></div></div>
+            <div class="gallery-card" data-category="ecommerce" data-prompt="数码电子产品详情页首图，科技蓝背景"><div class="gallery-placeholder gp-ecom-tech"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg><span>数码详情</span></div></div>
+            <div class="gallery-card" data-category="ecommerce" data-prompt="家居生活用品场景图，温馨日系风格"><div class="gallery-placeholder gp-ecom-home"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>家居场景</span></div></div>
+            <!-- 人像 portrait -->
+            <div class="gallery-card" data-category="portrait" data-prompt="专业商务形象照，纯色背景，柔光"><div class="gallery-placeholder gp-port-business"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>商务照</span></div></div>
+            <div class="gallery-card" data-category="portrait" data-prompt="复古胶片风格人像写真，暖色调颗粒感"><div class="gallery-placeholder gp-port-retro"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg><span>复古写真</span></div></div>
+            <div class="gallery-card" data-category="portrait" data-prompt="动漫二次元风格头像，精致大眼睛"><div class="gallery-placeholder gp-port-anime"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2a7 7 0 017 7v3a7 7 0 01-14 0V9a7 7 0 017-7z"/><path d="M8 14s1 2 4 2 4-2 4-2"/></svg><span>二次元头像</span></div></div>
+            <div class="gallery-card" data-category="portrait" data-prompt="油画风格古典人像，伦勃朗光影"><div class="gallery-placeholder gp-port-oil"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="10" r="4"/><path d="M6 21v-1a6 6 0 0112 0v1"/></svg><span>油画人像</span></div></div>
+            <div class="gallery-card" data-category="portrait" data-prompt="赛博朋克风格人像，霓虹灯光面部特写"><div class="gallery-placeholder gp-port-cyber"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="10" r="3"/></svg><span>赛博人像</span></div></div>
+            <div class="gallery-card" data-category="portrait" data-prompt="中国古风汉服人像，水墨山水背景"><div class="gallery-placeholder gp-port-hanfu"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22c6 0 10-4 10-10S18 2 12 2 2 6 2 12s4 10 10 10z"/><path d="M8 12s2 4 4 4 4-4 4-4"/><path d="M9 8h.01M15 8h.01"/></svg><span>古风汉服</span></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 代码面板 -->
+      <div class="tool-panel" id="panelCode">
+        <div class="panel-header">
+          <h3>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            代码助手
+          </h3>
+          <button class="panel-close" data-panel="panelCode" title="关闭">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="panel-body">
+          <div class="panel-options">
+            <button class="panel-tag active"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg><span>代码模式</span><span class="tag-close panel-close-tag" data-panel="panelCode">×</span></button>
+            <div class="panel-dropdown-wrap">
+              <button class="panel-option-btn" id="codeLangBtn" title="选择语言">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/></svg>
+                <span>语言 <span id="currentLang">自动检测</span></span>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+              <div class="panel-dropdown" id="langDropdown">
+                <div class="lang-option active" data-lang="auto">自动检测</div>
+                <div class="lang-option" data-lang="javascript">JavaScript</div>
+                <div class="lang-option" data-lang="typescript">TypeScript</div>
+                <div class="lang-option" data-lang="python">Python</div>
+                <div class="lang-option" data-lang="java">Java</div>
+                <div class="lang-option" data-lang="go">Go</div>
+                <div class="lang-option" data-lang="rust">Rust</div>
+                <div class="lang-option" data-lang="cpp">C++</div>
+              </div>
+            </div>
+            <button class="panel-option-btn" id="codeUploadBtn" title="上传代码文件">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <span>上传代码</span>
+            </button>
+          </div>
+          <div class="panel-quick-actions">
+            <button class="quick-action-card" data-action="code-review">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+              <span>代码审查</span><small>分析代码质量和潜在问题</small>
+            </button>
+            <button class="quick-action-card" data-action="code-explain">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+              <span>代码解释</span><small>逐行解读代码逻辑</small>
+            </button>
+            <button class="quick-action-card" data-action="code-refactor">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+              <span>代码重构</span><small>优化代码结构与性能</small>
+            </button>
+            <button class="quick-action-card" data-action="code-test">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+              <span>生成测试</span><small>自动生成单元测试用例</small>
+            </button>
+            <button class="quick-action-card" data-action="code-fix">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>修复 Bug</span><small>定位并修复代码问题</small>
+            </button>
+            <button class="quick-action-card" data-action="code-doc">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              <span>生成文档</span><small>自动生成代码注释与文档</small>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 深度思考面板 -->
+      <div class="tool-panel" id="panelDeepThink">
+        <div class="panel-header">
+          <h3>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+            深度思考模式
+          </h3>
+          <button class="panel-close" data-panel="panelDeepThink" title="关闭">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="panel-body">
+          <div class="panel-info-card">
+            <div class="info-icon think-glow">🧠</div>
+            <div class="info-text">
+              <strong>深度思考已启用</strong>
+              <p>AI 将使用更长的推理链进行分析，适合复杂问题、数学推理、逻辑分析等场景。响应时间可能较长。</p>
+            </div>
+          </div>
+          <div class="panel-options">
+            <button class="panel-tag active"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg><span>深度思考</span><span class="tag-close panel-close-tag" data-panel="panelDeepThink">×</span></button>
+            <div class="panel-dropdown-wrap">
+              <button class="panel-option-btn" id="thinkDepthBtn" title="思考深度">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
+                <span>深度 <span id="currentDepth">标准</span></span>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+              <div class="panel-dropdown" id="depthDropdown">
+                <div class="depth-option" data-depth="快速">快速 — 简要推理</div>
+                <div class="depth-option active" data-depth="标准">标准 — 平衡深度与速度</div>
+                <div class="depth-option" data-depth="深入">深入 — 完整推理链</div>
+              </div>
+            </div>
+          </div>
+          <div class="panel-quick-actions compact">
+            <button class="quick-action-chip" data-prompt="请帮我分析这个问题的本质原因">根因分析</button>
+            <button class="quick-action-chip" data-prompt="请对比这几种方案的优缺点">方案对比</button>
+            <button class="quick-action-chip" data-prompt="请逐步推理这个数学问题">数学推理</button>
+            <button class="quick-action-chip" data-prompt="请分析这段代码的时间复杂度">复杂度分析</button>
+            <button class="quick-action-chip" data-prompt="请评估这个架构设计的可行性">架构评估</button>
+            <button class="quick-action-chip" data-prompt="请帮我进行系统性的 debug">系统调试</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 深度研究面板 -->
+      <div class="tool-panel" id="panelResearch">
+        <div class="panel-header">
+          <h3>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            深度研究
+          </h3>
+          <button class="panel-close" data-panel="panelResearch" title="关闭">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="panel-body">
+          <div class="panel-info-card">
+            <div class="info-icon research-glow">🔍</div>
+            <div class="info-text">
+              <strong>深度研究已启用</strong>
+              <p>AI 将进行多轮搜索和分析，综合多种信息源，生成深度研究报告。适合技术调研、方案对比等场景。</p>
+            </div>
+          </div>
+          <div class="panel-options">
+            <button class="panel-tag active"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><span>深度研究</span><span class="tag-close panel-close-tag" data-panel="panelResearch">×</span></button>
+            <div class="panel-dropdown-wrap">
+              <button class="panel-option-btn" id="researchScopeBtn" title="研究范围">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+                <span>范围 <span id="currentScope">全网</span></span>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+              <div class="panel-dropdown" id="scopeDropdown">
+                <div class="scope-option active" data-scope="全网">全网搜索</div>
+                <div class="scope-option" data-scope="技术">技术文档</div>
+                <div class="scope-option" data-scope="学术">学术论文</div>
+                <div class="scope-option" data-scope="GitHub">GitHub</div>
+              </div>
+            </div>
+          </div>
+          <div class="panel-quick-actions compact">
+            <button class="quick-action-chip" data-prompt="帮我调研目前主流的前端框架对比">框架对比</button>
+            <button class="quick-action-chip" data-prompt="帮我研究这个技术的最佳实践">最佳实践</button>
+            <button class="quick-action-chip" data-prompt="帮我分析这个开源项目的架构设计">项目分析</button>
+            <button class="quick-action-chip" data-prompt="帮我搜索这个错误的解决方案">错误排查</button>
+            <button class="quick-action-chip" data-prompt="帮我调研行业技术趋势">趋势调研</button>
+            <button class="quick-action-chip" data-prompt="帮我对比这几个工具的优劣">工具对比</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 任务助理面板 -->
+      <div class="tool-panel" id="panelTask">
+        <div class="panel-header">
+          <h3>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            任务助理
+          </h3>
+          <button class="panel-close" data-panel="panelTask" title="关闭">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="panel-body">
+          <div class="panel-options">
+            <button class="panel-tag active"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg><span>任务模式</span><span class="tag-close panel-close-tag" data-panel="panelTask">×</span></button>
+            <div class="panel-dropdown-wrap">
+              <button class="panel-option-btn" id="taskAgentBtn" title="选择智能体">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span>智能体 <span id="currentAgent">Sisyphus</span></span>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+              <div class="panel-dropdown" id="agentDropdown">
+                <div class="agent-option active" data-agent="Sisyphus">Sisyphus — 通用任务执行</div>
+                <div class="agent-option" data-agent="Hephaestus">Hephaestus — 代码锻造</div>
+                <div class="agent-option" data-agent="Prometheus">Prometheus — 创新探索</div>
+                <div class="agent-option" data-agent="Atlas">Atlas — 大规模重构</div>
+              </div>
+            </div>
+          </div>
+          <div class="panel-quick-actions">
+            <button class="quick-action-card" data-action="task-implement">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              <span>实现功能</span><small>描述需求，AI 自动编码实现</small>
+            </button>
+            <button class="quick-action-card" data-action="task-refactor">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <span>重构代码</span><small>优化现有代码结构和质量</small>
+            </button>
+            <button class="quick-action-card" data-action="task-fix">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>修复问题</span><small>定位并自动修复 Bug</small>
+            </button>
+            <button class="quick-action-card" data-action="task-test">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+              <span>编写测试</span><small>自动生成测试用例和覆盖率</small>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ Input Area ═══ -->
+      <div class="chat-input-area">
+        <div class="input-container">
+          <div class="input-box" id="inputBox">
+            <textarea id="chatInput" placeholder="向 OpenCode 提问..." rows="1"></textarea>
+          </div>
+          <!-- Toolbar below input -->
+          <div class="input-toolbar">
+            <div class="toolbar-left">
+              <button class="tool-btn" id="toolTaskBtn" title="任务助理">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                <span>任务助理</span>
+              </button>
+              <button class="tool-btn" id="toolDeepThinkBtn" title="深度思考">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+                <span>深度思考</span>
+              </button>
+              <button class="tool-btn" id="toolResearchBtn" title="深度研究">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                <span>深度研究</span>
+              </button>
+              <button class="tool-btn" id="toolCodeBtn" title="代码模式">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                <span>代码</span>
+              </button>
+              <button class="tool-btn" id="toolImageBtn" title="图像">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <span>图像</span>
+              </button>
+              <button class="tool-btn" id="toolMoreBtn" title="更多功能">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                <span>更多</span>
+              </button>
+            </div>
+            <div class="toolbar-right">
+              <button class="tool-icon-btn" id="toolUploadBtn" title="上传文件">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+              </button>
+              <button class="tool-icon-btn" id="toolWebBtn" title="联网搜索">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              </button>
+              <button class="tool-icon-btn" id="toolMicBtn" title="语音输入">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+              </button>
+              <button class="send-btn" id="sendBtn" title="发送消息">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- More Menu Dropdown -->
+  <div class="more-menu hidden" id="moreMenu">
+    <button class="more-menu-item" data-action="upload-all" title="上传文件"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>上传文件</span></button>
+    <button class="more-menu-item" data-action="terminal" title="打开终端"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg><span>终端</span></button>
+    <button class="more-menu-item" data-action="clear-chat" title="清除对话"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>清除对话</span></button>
+    <button class="more-menu-item" data-action="settings" title="设置"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg><span>设置</span></button>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal-overlay hidden" id="settingsModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>设置</h3>
+        <button class="modal-close" id="closeSettingsBtn" title="关闭设置">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="setting-group">
+          <h4>API 接口设置</h4>
+          <div class="setting-row"><span>LLM Base URL</span><input type="text" id="settingLlmBase" class="setting-input" placeholder="https://api.openai.com/v1"></div>
+          <div class="setting-row"><span>LLM API Key</span><input type="password" id="settingLlmKey" class="setting-input" placeholder="sk-..."></div>
+          <div class="setting-row"><span>默认模型</span><select id="settingModel" title="默认模型"><option>GPT-4o</option><option>GPT-4o-mini</option><option>Claude-3.5-Sonnet</option><option>DeepSeek-V3</option><option>Qwen-Max</option></select></div>
+          <div class="setting-row"><span>VLM Base URL</span><input type="text" id="settingVlmBase" class="setting-input" placeholder="https://dashscope.aliyuncs.com/compatible-mode/v1"></div>
+          <div class="setting-row"><span>VLM API Key</span><input type="password" id="settingVlmKey" class="setting-input" placeholder="sk-..."></div>
+          <div class="setting-row"><span>VLM 模型</span><input type="text" id="settingVlmModel" class="setting-input" placeholder="qwen-vl-max"></div>
+        </div>
+        <div class="setting-group">
+          <h4>主题与外观</h4>
+          <div class="setting-row"><span>深色/浅色模式</span>
+            <select id="settingThemeMode" title="深色/浅色模式"><option value="light">浅色</option><option value="dark">深色</option><option value="system">跟随系统</option></select>
+          </div>
+          <div class="setting-row"><span>强调色</span>
+            <div class="color-swatches" id="accentSwatches">
+              <button class="color-swatch active" data-accent="indigo" title="靛蓝 (默认)"></button>
+              <button class="color-swatch" data-accent="violet" title="紫罗兰"></button>
+              <button class="color-swatch" data-accent="blue" title="天蓝"></button>
+              <button class="color-swatch" data-accent="teal" title="青色"></button>
+              <button class="color-swatch" data-accent="emerald" title="翡翠绿"></button>
+              <button class="color-swatch" data-accent="amber" title="琥珀"></button>
+              <button class="color-swatch" data-accent="rose" title="玫瑰红"></button>
+              <button class="color-swatch" data-accent="slate" title="石板灰"></button>
+            </div>
+          </div>
+          <div class="setting-row"><span>侧边栏颜色</span>
+            <div class="color-swatches" id="sidebarSwatches">
+              <button class="color-swatch active" data-sidebar="default" title="默认"></button>
+              <button class="color-swatch" data-sidebar="dark" title="深色"></button>
+              <button class="color-swatch" data-sidebar="warm" title="暖色"></button>
+              <button class="color-swatch" data-sidebar="cool" title="冷色"></button>
+              <button class="color-swatch" data-sidebar="purple" title="紫色"></button>
+            </div>
+          </div>
+        </div>
+        <div class="setting-group">
+          <h4>窗口设置</h4>
+          <div class="setting-row"><span>窗口始终置顶</span><label class="switch"><input type="checkbox" id="settingOnTop" title="窗口始终置顶"><span class="slider"></span></label></div>
+          <div class="setting-row"><span>关闭时显示悬浮气泡</span><label class="switch"><input type="checkbox" id="settingBubble" checked title="关闭时显示悬浮气泡"><span class="slider"></span></label></div>
+        </div>
+        <div class="setting-group">
+          <h4>语音设置（ASR / TTS）</h4>
+          <div class="setting-row"><span>API Base URL</span><input type="text" id="settingVoiceApiBase" class="setting-input" placeholder="https://api.openai.com/v1"></div>
+          <div class="setting-row"><span>API Key</span><input type="password" id="settingVoiceApiKey" class="setting-input" placeholder="sk-..."></div>
+          <div class="setting-row"><span>ASR 模型</span><input type="text" id="settingAsrModel" class="setting-input" placeholder="whisper-1"></div>
+          <div class="setting-row"><span>TTS 模型</span><input type="text" id="settingTtsModel" class="setting-input" placeholder="tts-1"></div>
+          <div class="setting-row"><span>TTS 语音</span><select id="settingTtsVoice" title="TTS 语音"><option value="alloy">Alloy</option><option value="echo">Echo</option><option value="fable">Fable</option><option value="onyx">Onyx</option><option value="nova">Nova</option><option value="shimmer">Shimmer</option></select></div>
+          <div class="setting-row"><span>AI 回复自动朗读</span><label class="switch"><input type="checkbox" id="settingAutoTts" title="AI 回复自动朗读"><span class="slider"></span></label></div>
+        </div>
+        <div class="setting-group">
+          <h4>关于</h4>
+          <p class="about-text">Oh My OpenCode Desktop v1.0.0<br>最强 AI 编程助手 — 多模型编排 · 并行后台代理 · LSP/AST 工具</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Terminal Modal -->
+  <div class="modal-overlay hidden" id="terminalModal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3>终端</h3>
+        <button class="modal-close" id="closeTerminalBtn" title="关闭终端">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body terminal-modal-body">
+        <div class="terminal-container" id="terminalOutput"></div>
+        <div class="terminal-input-area">
+          <span class="terminal-prompt">$</span>
+          <input type="text" id="terminalInput" placeholder="输入命令..." />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

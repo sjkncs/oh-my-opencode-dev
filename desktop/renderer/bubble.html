@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bubble</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: transparent; overflow: visible;
+      width: 60px; height: 60px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    }
+
+    /* ── Bubble circle ── */
+    .bubble {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; position: relative;
+      box-shadow: 0 4px 20px rgba(108,92,231,0.5), 0 0 40px rgba(108,92,231,0.2);
+      transition: all 0.3s ease;
+      animation: breathe 3s ease-in-out infinite;
+    }
+    .bubble:hover { transform: scale(1.12); box-shadow: 0 6px 28px rgba(108,92,231,0.7), 0 0 50px rgba(108,92,231,0.3); }
+    .bubble:active { transform: scale(0.95); }
+    .bubble svg { width: 26px; height: 26px; color: white; pointer-events: none; }
+    .pulse-ring {
+      position: absolute; width: 52px; height: 52px; border-radius: 50%;
+      border: 2px solid rgba(108,92,231,0.4); animation: pulse 2s ease-out infinite;
+    }
+    @keyframes breathe {
+      0%,100% { box-shadow: 0 4px 20px rgba(108,92,231,0.5), 0 0 40px rgba(108,92,231,0.2); }
+      50% { box-shadow: 0 4px 28px rgba(108,92,231,0.7), 0 0 50px rgba(108,92,231,0.35); }
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
+
+    /* ── Mini Panel ── */
+    .mini-panel {
+      display: none; position: fixed; top: 10px; left: 10px; right: 10px; bottom: 70px;
+      background: #fff; border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+      flex-direction: column; overflow: hidden; z-index: 100;
+    }
+    .mini-panel.show { display: flex; }
+    .mp-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; border-bottom: 1px solid #f0f0f4;
+    }
+    .mp-title { font-size: 13px; font-weight: 700; color: #1a1a2e; display: flex; align-items: center; gap: 6px; }
+    .mp-title svg { width: 16px; height: 16px; color: #6c5ce7; }
+    .mp-close {
+      width: 24px; height: 24px; border: none; background: transparent; color: #9a9cb0;
+      cursor: pointer; border-radius: 6px; display: flex; align-items: center; justify-content: center;
+    }
+    .mp-close:hover { background: #f3f4f6; color: #374151; }
+
+    /* Quick action chips */
+    .mp-actions {
+      display: flex; gap: 6px; padding: 10px 16px; flex-wrap: wrap; border-bottom: 1px solid #f0f0f4;
+    }
+    .qa-chip {
+      display: flex; align-items: center; gap: 4px;
+      padding: 5px 10px; border: 1px solid #e5e7eb; background: #fafbfc;
+      color: #374151; font-size: 11px; border-radius: 20px; cursor: pointer;
+      font-family: inherit; transition: all 0.15s; white-space: nowrap;
+    }
+    .qa-chip:hover { background: #6c5ce7; color: #fff; border-color: #6c5ce7; }
+    .qa-chip svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+    /* Response area */
+    .mp-response {
+      flex: 1; padding: 12px 16px; overflow-y: auto; font-size: 13px;
+      color: #374151; line-height: 1.6;
+    }
+    .mp-response:empty::before {
+      content: '点击快捷操作或输入问题开始...';
+      color: #9a9cb0; font-style: italic;
+    }
+    .mp-response .thinking { color: #6c5ce7; animation: blink 1s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    /* Input row */
+    .mp-input-row {
+      display: flex; align-items: center; gap: 8px; padding: 10px 12px;
+      border-top: 1px solid #f0f0f4; background: #fafbfc;
+    }
+    .mp-input {
+      flex: 1; padding: 8px 12px; border: 1px solid #e5e7eb; background: #fff;
+      border-radius: 20px; font-size: 13px; color: #1a1a2e; font-family: inherit;
+      outline: none; transition: border-color 0.15s;
+    }
+    .mp-input:focus { border-color: #6c5ce7; }
+    .mp-send {
+      width: 32px; height: 32px; border: none; border-radius: 50%;
+      background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: #fff;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: transform 0.15s; flex-shrink: 0;
+    }
+    .mp-send:hover { transform: scale(1.1); }
+    .mp-send:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .mp-send svg { width: 16px; height: 16px; }
+
+    /* ── Context menu ── */
+    .ctx-menu {
+      display: none; position: fixed; z-index: 999;
+      background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.18); min-width: 160px; padding: 4px;
+    }
+    .ctx-menu.show { display: block; }
+    .ctx-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 14px; border: none; background: transparent; width: 100%;
+      color: #374151; font-size: 13px; cursor: pointer; border-radius: 6px;
+      font-family: inherit; transition: background 0.15s;
+    }
+    .ctx-item:hover { background: #f3f4f6; }
+    .ctx-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+    .ctx-item .shortcut { margin-left: auto; font-size: 11px; color: #9a9cb0; }
+    .ctx-sep { height: 1px; background: #e5e7eb; margin: 4px 8px; }
+
+    /* ── Settings overlay (kept from before) ── */
+    .settings-overlay {
+      display: none; position: fixed; inset: 0; z-index: 1000;
+      background: rgba(0,0,0,0.3); align-items: center; justify-content: center;
+    }
+    .settings-overlay.show { display: flex; }
+    .settings-panel {
+      background: #fff; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+      width: 380px; max-height: 520px; overflow-y: auto; padding: 20px;
+    }
+    .sp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .sp-header h3 { font-size: 15px; font-weight: 700; color: #1a1a2e; }
+    .sp-close { width: 24px; height: 24px; border: none; background: transparent; color: #9a9cb0; cursor: pointer; border-radius: 4px; display: flex; align-items: center; justify-content: center; }
+    .sp-close:hover { background: #f3f4f6; color: #374151; }
+    .sp-group { margin-bottom: 16px; }
+    .sp-group h4 { font-size: 11px; font-weight: 600; color: #9a9cb0; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .sp-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; font-size: 13px; color: #374151; }
+    .sp-row span { flex-shrink: 0; }
+    .sp-input { padding: 4px 8px; border: 1px solid #e5e7eb; background: #f9fafb; color: #374151; border-radius: 4px; font-size: 12px; font-family: inherit; outline: none; width: 180px; }
+    .sp-input:focus { border-color: #6366f1; }
+    .sp-swatches { display: flex; gap: 5px; }
+    .sp-swatch { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; transition: all 0.15s; position: relative; }
+    .sp-swatch:hover { transform: scale(1.15); }
+    .sp-swatch.active { border-color: #374151; }
+    .sp-swatch.active::after { content: '✓'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 10px; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+    .sp-select { padding: 4px 8px; border: 1px solid #e5e7eb; background: #f9fafb; color: #374151; border-radius: 4px; font-size: 12px; font-family: inherit; outline: none; }
+    .spc-indigo{background:#6366f1}.spc-violet{background:#8b5cf6}.spc-blue{background:#3b82f6}.spc-teal{background:#14b8a6}.spc-emerald{background:#10b981}.spc-amber{background:#f59e0b}.spc-rose{background:#f43f5e}.spc-slate{background:#64748b}
+  </style>
+</head>
+<body>
+  <div class="bubble" id="bubble">
+    <div class="pulse-ring"></div>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+    </svg>
+  </div>
+
+  <!-- Mini Quick-Action Panel -->
+  <div class="mini-panel" id="miniPanel">
+    <div class="mp-header">
+      <div class="mp-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        OpenCode 快捷助手
+      </div>
+      <button class="mp-close" id="mpClose" title="收起 (Esc)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="mp-actions">
+      <button class="qa-chip" data-action="translate">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8l6 6"/><path d="M4 14l6-6 2-3"/><path d="M2 5h12"/><path d="M7 2v3"/><path d="M22 22l-5-10-5 10"/><path d="M14 18h6"/></svg>
+        翻译
+      </button>
+      <button class="qa-chip" data-action="summarize">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        总结
+      </button>
+      <button class="qa-chip" data-action="explain">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        解释代码
+      </button>
+      <button class="qa-chip" data-action="fix">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        修复
+      </button>
+      <button class="qa-chip" data-action="voice">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+        语音
+      </button>
+    </div>
+    <div class="mp-response" id="mpResponse"></div>
+    <div class="mp-input-row">
+      <input class="mp-input" id="mpInput" type="text" placeholder="快速提问... (Enter 发送)">
+      <button class="mp-send" id="mpSend" title="发送">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Context Menu -->
+  <div class="ctx-menu" id="ctxMenu">
+    <button class="ctx-item" id="ctxPanel">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+      快捷面板<span class="shortcut">Ctrl+Shift+Space</span>
+    </button>
+    <button class="ctx-item" id="ctxOpen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg>
+      打开主窗口<span class="shortcut">Ctrl+Shift+O</span>
+    </button>
+    <button class="ctx-item" id="ctxSettings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      设置
+    </button>
+    <div class="ctx-sep"></div>
+    <button class="ctx-item" id="ctxQuit">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+      退出<span class="shortcut">Ctrl+Shift+Q</span>
+    </button>
+  </div>
+
+  <!-- Settings Panel -->
+  <div class="settings-overlay" id="settingsOverlay">
+    <div class="settings-panel">
+      <div class="sp-header">
+        <h3>设置</h3>
+        <button class="sp-close" id="spClose"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg></button>
+      </div>
+      <div class="sp-group">
+        <h4>API 接口</h4>
+        <div class="sp-row"><span>LLM Base URL</span><input type="text" class="sp-input" id="bLlmBase" placeholder="https://api.openai.com/v1"></div>
+        <div class="sp-row"><span>LLM API Key</span><input type="password" class="sp-input" id="bLlmKey" placeholder="sk-..."></div>
+        <div class="sp-row"><span>VLM Base URL</span><input type="text" class="sp-input" id="bVlmBase" placeholder="https://dashscope..."></div>
+        <div class="sp-row"><span>VLM API Key</span><input type="password" class="sp-input" id="bVlmKey" placeholder="sk-..."></div>
+        <div class="sp-row"><span>VLM 模型</span><input type="text" class="sp-input" id="bVlmModel" placeholder="qwen-vl-max"></div>
+      </div>
+      <div class="sp-group">
+        <h4>主题</h4>
+        <div class="sp-row"><span>模式</span><select class="sp-select" id="bThemeMode"><option value="light">浅色</option><option value="dark">深色</option><option value="system">跟随系统</option></select></div>
+        <div class="sp-row"><span>强调色</span>
+          <div class="sp-swatches" id="bAccentSwatches">
+            <button class="sp-swatch active spc-indigo" data-accent="indigo"></button>
+            <button class="sp-swatch spc-violet" data-accent="violet"></button>
+            <button class="sp-swatch spc-blue" data-accent="blue"></button>
+            <button class="sp-swatch spc-teal" data-accent="teal"></button>
+            <button class="sp-swatch spc-emerald" data-accent="emerald"></button>
+            <button class="sp-swatch spc-amber" data-accent="amber"></button>
+            <button class="sp-swatch spc-rose" data-accent="rose"></button>
+            <button class="sp-swatch spc-slate" data-accent="slate"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const bubble = document.getElementById('bubble');
+    const ctxMenu = document.getElementById('ctxMenu');
+    const miniPanel = document.getElementById('miniPanel');
+    const mpInput = document.getElementById('mpInput');
+    const mpResponse = document.getElementById('mpResponse');
+    const mpSend = document.getElementById('mpSend');
+    const settingsOverlay = document.getElementById('settingsOverlay');
+    let currentSettings = {};
+    let menuOpen = false, panelOpen = false, settingsOpen = false, sending = false;
+
+    // ── JS-based drag ──
+    let dragging = false, dragStartX = 0, dragStartY = 0, didDrag = false;
+    const DRAG_THRESHOLD = 5;
+
+    bubble.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
+      if (panelOpen || menuOpen || settingsOpen) return;
+      dragging = true; didDrag = false;
+      dragStartX = e.screenX; dragStartY = e.screenY;
+      e.preventDefault();
+    });
+    document.addEventListener('mousemove', (e) => {
+      if (!dragging) return;
+      const dx = e.screenX - dragStartX, dy = e.screenY - dragStartY;
+      if (!didDrag && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)) didDrag = true;
+      if (didDrag) {
+        window.electronAPI.bubbleDrag(dx, dy);
+        dragStartX = e.screenX; dragStartY = e.screenY;
+      }
+    });
+    document.addEventListener('mouseup', (e) => {
+      if (!dragging) return;
+      dragging = false;
+      if (!didDrag && e.button === 0 && !panelOpen && !menuOpen && !settingsOpen) {
+        openPanel();
+      }
+    });
+
+    // ── Single click → open mini panel ──
+    function openPanel() {
+      window.electronAPI.bubbleExpandPanel();
+      panelOpen = true;
+      setTimeout(() => {
+        miniPanel.classList.add('show');
+        mpInput.focus();
+      }, 200);
+    }
+
+    function closePanel() {
+      miniPanel.classList.remove('show');
+      panelOpen = false;
+      window.electronAPI.bubbleShrink();
+    }
+
+    document.getElementById('mpClose').addEventListener('click', closePanel);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (settingsOpen) { closeSettings(); return; }
+        if (menuOpen) { closeMenu(); return; }
+        if (panelOpen) { closePanel(); return; }
+      }
+    });
+
+    // ── Quick chat ──
+    async function sendQuickChat(text) {
+      if (!text.trim() || sending) return;
+      sending = true;
+      mpSend.disabled = true;
+      mpResponse.innerHTML = `<div><b style="color:#6c5ce7">你:</b> ${escHtml(text)}</div><div class="thinking">AI 思考中...</div>`;
+      mpInput.value = '';
+      try {
+        const res = await window.electronAPI.bubbleQuickChat(text);
+        if (res.error) {
+          mpResponse.innerHTML = `<div><b style="color:#6c5ce7">你:</b> ${escHtml(text)}</div><div style="color:#ef4444">${escHtml(res.error)}</div>`;
+        } else {
+          mpResponse.innerHTML = `<div><b style="color:#6c5ce7">你:</b> ${escHtml(text)}</div><div><b style="color:#10b981">AI:</b> ${escHtml(res.text)}</div>`;
+        }
+      } catch (e) {
+        mpResponse.innerHTML = `<div style="color:#ef4444">请求失败: ${escHtml(e.message)}</div>`;
+      }
+      sending = false;
+      mpSend.disabled = false;
+      mpResponse.scrollTop = mpResponse.scrollHeight;
+    }
+
+    function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    mpSend.addEventListener('click', () => sendQuickChat(mpInput.value));
+    mpInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendQuickChat(mpInput.value); }
+    });
+
+    // ── Quick action chips ──
+    document.querySelectorAll('.qa-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const action = chip.dataset.action;
+        const prompts = {
+          translate: '请将以下内容翻译为英文（如果是英文则翻译为中文）：\n',
+          summarize: '请用3-5句话总结以下内容：\n',
+          explain: '请解释以下代码的功能和逻辑：\n',
+          fix: '请找出以下代码的问题并修复：\n',
+        };
+        if (action === 'voice') {
+          startVoiceInput();
+          return;
+        }
+        const prefix = prompts[action] || '';
+        mpInput.value = prefix;
+        mpInput.focus();
+        mpInput.setSelectionRange(prefix.length, prefix.length);
+      });
+    });
+
+    // ── Voice input (reuse ASR from main) ──
+    let micRecorder = null, micStream = null, micChunks = [], isRecording = false;
+    async function startVoiceInput() {
+      if (isRecording) { stopVoiceInput(); return; }
+      try {
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        micRecorder = new MediaRecorder(micStream, { mimeType: 'audio/webm;codecs=opus' });
+        micChunks = [];
+        micRecorder.ondataavailable = (e) => { if (e.data.size > 0) micChunks.push(e.data); };
+        micRecorder.onstop = async () => {
+          micStream.getTracks().forEach(t => t.stop());
+          if (micChunks.length === 0) return;
+          mpResponse.innerHTML = '<div class="thinking">语音识别中...</div>';
+          const blob = new Blob(micChunks, { type: 'audio/webm' });
+          const buf = await blob.arrayBuffer();
+          const res = await window.electronAPI.speechToText(buf);
+          if (res.text) {
+            mpInput.value = res.text;
+            mpInput.focus();
+            mpResponse.innerHTML = `<div>识别结果已填入输入框</div>`;
+          } else {
+            mpResponse.innerHTML = `<div style="color:#ef4444">${escHtml(res.error || '识别失败')}</div>`;
+          }
+          document.querySelector('[data-action="voice"]').style.background = '';
+          document.querySelector('[data-action="voice"]').style.color = '';
+        };
+        micRecorder.start();
+        isRecording = true;
+        document.querySelector('[data-action="voice"]').style.background = '#ef4444';
+        document.querySelector('[data-action="voice"]').style.color = '#fff';
+      } catch (e) {
+        mpResponse.innerHTML = `<div style="color:#ef4444">麦克风权限被拒绝</div>`;
+      }
+    }
+    function stopVoiceInput() {
+      if (micRecorder && micRecorder.state !== 'inactive') micRecorder.stop();
+      isRecording = false;
+    }
+
+    // ── Right-click → context menu ──
+    bubble.addEventListener('contextmenu', (e) => {
+      e.preventDefault(); e.stopPropagation(); dragging = false;
+      if (panelOpen || settingsOpen) return;
+      window.electronAPI.bubbleExpandMenu();
+      menuOpen = true;
+      setTimeout(() => {
+        ctxMenu.style.left = '10px'; ctxMenu.style.top = '70px';
+        ctxMenu.classList.add('show');
+      }, 180);
+    });
+
+    function closeMenu() {
+      ctxMenu.classList.remove('show');
+      menuOpen = false;
+      if (!panelOpen && !settingsOpen) window.electronAPI.bubbleShrink();
+    }
+
+    document.addEventListener('mousedown', (e) => {
+      if (menuOpen && !ctxMenu.contains(e.target) && !bubble.contains(e.target)) closeMenu();
+    });
+
+    document.getElementById('ctxPanel').addEventListener('click', () => {
+      closeMenu();
+      openPanel();
+    });
+    document.getElementById('ctxOpen').addEventListener('click', () => {
+      closeMenu();
+      window.electronAPI.bubbleShrink();
+      setTimeout(() => window.electronAPI.showMainFromBubble(), 100);
+    });
+    document.getElementById('ctxSettings').addEventListener('click', async () => {
+      closeMenu();
+      settingsOpen = true;
+      window.electronAPI.bubbleExpandSettings();
+      currentSettings = await window.electronAPI.loadSettings() || {};
+      loadBubbleSettings();
+      setTimeout(() => settingsOverlay.classList.add('show'), 250);
+    });
+    document.getElementById('ctxQuit').addEventListener('click', () => {
+      closeMenu();
+      window.electronAPI.bubbleShrink();
+      setTimeout(() => window.close(), 100);
+    });
+
+    // ── Settings ──
+    function closeSettings() {
+      settingsOverlay.classList.remove('show');
+      settingsOpen = false;
+      window.electronAPI.bubbleShrink();
+    }
+    document.getElementById('spClose').addEventListener('click', closeSettings);
+    settingsOverlay.addEventListener('click', (e) => { if (e.target === settingsOverlay) closeSettings(); });
+
+    function loadBubbleSettings() {
+      document.getElementById('bLlmBase').value = currentSettings.llmBase || '';
+      document.getElementById('bLlmKey').value = currentSettings.llmKey || '';
+      document.getElementById('bVlmBase').value = currentSettings.vlmBase || '';
+      document.getElementById('bVlmKey').value = currentSettings.vlmKey || '';
+      document.getElementById('bVlmModel').value = currentSettings.vlmModel || '';
+      document.getElementById('bThemeMode').value = currentSettings.theme || 'light';
+      document.querySelectorAll('#bAccentSwatches .sp-swatch').forEach(sw => {
+        sw.classList.toggle('active', sw.dataset.accent === (currentSettings.accentColor || 'indigo'));
+      });
+    }
+    function saveBubbleSettings() {
+      currentSettings.llmBase = document.getElementById('bLlmBase').value.trim();
+      currentSettings.llmKey = document.getElementById('bLlmKey').value.trim();
+      currentSettings.vlmBase = document.getElementById('bVlmBase').value.trim();
+      currentSettings.vlmKey = document.getElementById('bVlmKey').value.trim();
+      currentSettings.vlmModel = document.getElementById('bVlmModel').value.trim();
+      currentSettings.theme = document.getElementById('bThemeMode').value;
+      window.electronAPI.saveSettings(currentSettings);
+    }
+    ['bLlmBase','bLlmKey','bVlmBase','bVlmKey','bVlmModel'].forEach(id => {
+      const el = document.getElementById(id);
+      el.addEventListener('change', saveBubbleSettings);
+      el.addEventListener('blur', saveBubbleSettings);
+    });
+    document.getElementById('bThemeMode').addEventListener('change', saveBubbleSettings);
+    document.querySelectorAll('#bAccentSwatches .sp-swatch').forEach(sw => {
+      sw.addEventListener('click', () => {
+        document.querySelectorAll('#bAccentSwatches .sp-swatch').forEach(s => s.classList.remove('active'));
+        sw.classList.add('active');
+        currentSettings.accentColor = sw.dataset.accent;
+        saveBubbleSettings();
+      });
+    });
+
+    // ── Global shortcut toggle ──
+    window.electronAPI.onTogglePanel(() => {
+      if (panelOpen) { closePanel(); }
+      else if (!menuOpen && !settingsOpen) { openPanel(); }
+    });
+  </script>
+</body>
+</html>
