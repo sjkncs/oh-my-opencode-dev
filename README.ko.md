@@ -49,6 +49,7 @@
 
 ### 확장 및 최적화
 
+- **i18n 다국어** — 简体中文 / English / 한국어 실시간 전환
 - **Electron 데스크톱 래퍼** — 네이티브 앱 경험
 - **IPC 아키텍처** — 안전한 contextBridge 통신
 - **OpenCode SDK 통합** — 직접 API 연결, 스트리밍
@@ -56,7 +57,8 @@
 - **설정 동기화** — 메인 창과 버블 간 공유
 - **접근성** — ARIA 속성, 키보드 내비게이션
 - **CSS 아키텍처** — 유틸리티 클래스, Safari 호환
-- **다중 형식 빌드** — NSIS, Portable, DMG, AppImage, DEB
+- **CI/CD 파이프라인** — GitHub Actions 자동 빌드 (전 플랫폼)
+- **보안 패치** — Electron 40.4.1, node-tar 취약점 수정
 
 </td>
 </tr>
@@ -83,6 +85,37 @@ npm run build:linux  # Linux 빌드
 # AI 에이전트에게 설치를 맡기세요:
 # "다음 지침에 따라 oh-my-opencode를 설치하세요: https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/refs/heads/master/docs/guide/installation.md"
 ```
+
+---
+
+## 다운로드
+
+사전 빌드된 바이너리는 [GitHub Actions](https://github.com/sjkncs/oh-my-opencode-dev/actions) 아티팩트에서 다운로드하거나 로컬에서 빌드할 수 있습니다:
+
+| 플랫폼 | 형식 | 로컬 빌드 | CI 빌드 |
+|---|---|---|---|
+| **Windows** | NSIS 설치 프로그램 + Portable exe | `npm run build:win` | ✅ GitHub Actions |
+| **macOS** | DMG + ZIP | `npm run build:mac` | ✅ GitHub Actions |
+| **Linux** | AppImage + DEB | `npm run build:linux` | ✅ GitHub Actions |
+| **빠른 테스트** | 압축 해제 폴더 | `npm run build:dir` | — |
+
+> **팁**: [Actions → Build & Release](https://github.com/sjkncs/oh-my-opencode-dev/actions/workflows/build.yml) → 최신 실행 → **Artifacts** 섹션에서 다운로드하세요.
+
+---
+
+## 다국어 지원 (i18n)
+
+전체 데스크톱 UI가 **3개 언어**를 실시간으로 전환합니다:
+
+| 언어 | 코드 | 상태 |
+|---|---|---|
+| **简体中文** | `zh` | ✅ 기본 |
+| **English** | `en` | ✅ 완전 |
+| **한국어** | `ko` | ✅ 완전 |
+
+**전환 방법:** 설정 → 인터페이스 언어 → 언어 선택 → 즉시 적용.
+
+모든 UI 요소가 번역됨: 타이틀바, 사이드바, 환영 화면, 패널, 입력 영역, 버블, 컨텍스트 메뉴, 설정 모달, 터미널.
 
 ---
 
@@ -116,14 +149,24 @@ npm run build:linux  # Linux 빌드
 | **코드 수정** | 코드 문제 수정 |
 | **음성** | Whisper ASR을 통한 음성 입력 |
 
-### 빌드 대상
+### CI/CD — GitHub Actions 자동 빌드
 
-| 플랫폼 | 형식 | 명령어 |
-|---|---|---|
-| **Windows** | NSIS 설치 프로그램 + Portable exe | `npm run build:win` |
-| **macOS** | DMG + ZIP | `npm run build:mac` |
-| **Linux** | AppImage + DEB | `npm run build:linux` |
-| **빠른 테스트** | 압축 해제 폴더 | `npm run build:dir` |
+모든 플랫폼은 GitHub Actions를 통해 자동 빌드됩니다:
+
+```yaml
+# 트리거: 태그 푸시 (v*) 또는 수동 workflow_dispatch
+# 빌드: Windows (NSIS+Portable) / macOS (DMG+ZIP) / Linux (AppImage+DEB)
+# 아티팩트가 플랫폼별로 업로드됨
+```
+
+새 버전 릴리스:
+
+```bash
+git tag v1.0.1
+git push --tags   # Win/Mac/Linux 전 플랫폼 자동 빌드 트리거
+```
+
+또는 수동 트리거: **Actions → Build & Release → Run workflow**
 
 ---
 
@@ -140,7 +183,9 @@ oh-my-opencode-dev/
 │       ├── index.html      # 메인 창 UI
 │       ├── styles.css      # 테마 시스템
 │       ├── app.js          # 애플리케이션 로직
+│       ├── i18n.js         # 국제화 (zh/en/ko)
 │       └── bubble.html     # 플로팅 버블 + 미니 패널
+├── .github/workflows/      # CI/CD (GitHub Actions)
 ├── docs/                   # 문서
 ├── packages/               # 플랫폼 바이너리
 ├── bin/                    # CLI 진입점

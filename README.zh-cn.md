@@ -49,6 +49,7 @@
 
 ### 扩展与优化
 
+- **i18n 多语言** — 简体中文 / English / 한국어 实时切换
 - **Electron 桌面封装** — 原生应用体验
 - **IPC 架构** — 安全的 contextBridge 通信
 - **OpenCode SDK 集成** — 直连 API，流式传输
@@ -56,7 +57,8 @@
 - **设置同步** — 主窗口与气泡共享设置
 - **无障碍支持** — ARIA 属性、键盘导航
 - **CSS 架构** — 工具类、Safari 兼容
-- **多格式构建** — NSIS、Portable、DMG、AppImage、DEB
+- **CI/CD 流水线** — GitHub Actions 自动构建全平台
+- **安全修复** — Electron 40.4.1，node-tar 漏洞已修复
 
 </td>
 </tr>
@@ -83,6 +85,37 @@ npm run build:linux  # 构建 Linux 版
 # 让你的 AI 代理来安装：
 # "按照以下说明安装 oh-my-opencode：https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/refs/heads/master/docs/guide/installation.md"
 ```
+
+---
+
+## 下载
+
+预构建二进制文件可从 [GitHub Actions](https://github.com/sjkncs/oh-my-opencode-dev/actions) 产物中下载，或本地构建：
+
+| 平台 | 格式 | 本地构建 | CI 构建 |
+|---|---|---|---|
+| **Windows** | NSIS 安装包 + Portable exe | `npm run build:win` | ✅ GitHub Actions |
+| **macOS** | DMG + ZIP | `npm run build:mac` | ✅ GitHub Actions |
+| **Linux** | AppImage + DEB | `npm run build:linux` | ✅ GitHub Actions |
+| **快速测试** | 免安装文件夹 | `npm run build:dir` | — |
+
+> **提示**：前往 [Actions → Build & Release](https://github.com/sjkncs/oh-my-opencode-dev/actions/workflows/build.yml) → 最新运行 → **Artifacts** 区域下载。
+
+---
+
+## 多语言支持 (i18n)
+
+整个桌面应用 UI 支持 **3 种语言** 实时切换：
+
+| 语言 | 代码 | 状态 |
+|---|---|---|
+| **简体中文** | `zh` | ✅ 默认 |
+| **English** | `en` | ✅ 完整 |
+| **한국어** | `ko` | ✅ 完整 |
+
+**切换方法：** 设置 → 界面语言 → 选择语言 → 即时生效。
+
+所有 UI 元素均已翻译：标题栏、侧边栏、欢迎页、各功能面板、输入区、气泡、右键菜单、设置模态框、终端。
 
 ---
 
@@ -116,14 +149,24 @@ npm run build:linux  # 构建 Linux 版
 | **修复** | 修复代码问题 |
 | **语音** | 通过 Whisper ASR 语音输入 |
 
-### 构建目标
+### CI/CD — GitHub Actions 自动构建
 
-| 平台 | 格式 | 命令 |
-|---|---|---|
-| **Windows** | NSIS 安装包 + Portable exe | `npm run build:win` |
-| **macOS** | DMG + ZIP | `npm run build:mac` |
-| **Linux** | AppImage + DEB | `npm run build:linux` |
-| **快速测试** | 免安装文件夹 | `npm run build:dir` |
+所有平台通过 GitHub Actions 自动构建：
+
+```yaml
+# 触发方式：推送标签 (v*) 或手动 workflow_dispatch
+# 构建：Windows (NSIS+Portable) / macOS (DMG+ZIP) / Linux (AppImage+DEB)
+# 产物按平台上传供下载
+```
+
+发布新版本：
+
+```bash
+git tag v1.0.1
+git push --tags   # 自动触发 Win/Mac/Linux 全平台构建
+```
+
+或手动触发：**Actions → Build & Release → Run workflow**
 
 ---
 
@@ -140,7 +183,9 @@ oh-my-opencode-dev/
 │       ├── index.html      # 主窗口 UI
 │       ├── styles.css      # 主题系统
 │       ├── app.js          # 应用逻辑
+│       ├── i18n.js         # 国际化 (zh/en/ko)
 │       └── bubble.html     # 悬浮气泡 + 迷你面板
+├── .github/workflows/      # CI/CD (GitHub Actions)
 ├── docs/                   # 文档
 ├── packages/               # 平台二进制文件
 ├── bin/                    # CLI 入口
@@ -212,6 +257,19 @@ oh-my-opencode-dev/
 - **[@junhoyeo](https://github.com/junhoyeo)** — 原项目精美的 Hero 图片
 - **[@sst](https://github.com/sst)** — 构建和维护 OpenCode
 - **开源社区** — 持续的反馈和贡献
+
+---
+
+## 安全
+
+所有已知安全漏洞均已修复：
+
+| 包名 | 问题 | 修复 |
+|---|---|---|
+| `electron` | ASAR 完整性绕过 (中等) | 升级到 **40.4.1** |
+| `node-tar` | 路径穿越、符号链接注入、竞态条件 (3× 高危) | 通过 `electron-builder@26.7.0` 升级 |
+
+`npm audit` → **0 漏洞**
 
 ---
 

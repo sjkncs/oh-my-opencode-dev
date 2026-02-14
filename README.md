@@ -49,6 +49,7 @@
 <td width="50%">
 
 ### Extensions & Optimizations
+- **i18n Multi-language** — 简体中文 / English / 한국어 switchable
 - **Electron Desktop Wrapper** — native app experience
 - **IPC Architecture** — secure contextBridge communication
 - **OpenCode SDK Integration** — direct API connection with streaming
@@ -56,7 +57,8 @@
 - **Settings Sync** — shared between main window and bubble
 - **Accessibility** — proper ARIA attributes, keyboard navigation
 - **CSS Architecture** — utility classes, Safari compatibility
-- **Multi-format Build** — NSIS, Portable, DMG, AppImage, DEB
+- **CI/CD Pipeline** — GitHub Actions auto-build for all platforms
+- **Security Patched** — Electron 40.4.1, node-tar fixed
 
 </td>
 </tr>
@@ -83,6 +85,37 @@ npm run build:linux # Build for Linux
 # Let your AI agent install it:
 # "Install oh-my-opencode following: https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/refs/heads/master/docs/guide/installation.md"
 ```
+
+---
+
+## Downloads
+
+Pre-built binaries are available from [GitHub Actions](https://github.com/sjkncs/oh-my-opencode-dev/actions) artifacts, or build locally:
+
+| Platform | Format | Local Build | CI Build |
+|---|---|---|---|
+| **Windows** | NSIS installer + Portable exe | `npm run build:win` | ✅ GitHub Actions |
+| **macOS** | DMG + ZIP | `npm run build:mac` | ✅ GitHub Actions |
+| **Linux** | AppImage + DEB | `npm run build:linux` | ✅ GitHub Actions |
+| **Quick Test** | Unpacked folder | `npm run build:dir` | — |
+
+> **Tip**: Go to [Actions → Build & Release](https://github.com/sjkncs/oh-my-opencode-dev/actions/workflows/build.yml) → latest run → **Artifacts** section to download.
+
+---
+
+## Multi-Language Support (i18n)
+
+The entire desktop UI supports **3 languages** with real-time switching:
+
+| Language | Code | Status |
+|---|---|---|
+| **简体中文** | `zh` | ✅ Default |
+| **English** | `en` | ✅ Full |
+| **한국어** | `ko` | ✅ Full |
+
+**How to switch:** Settings → Interface Language → select language → instant apply.
+
+All UI elements are translated: titlebar, sidebar, welcome screen, panels, input area, bubble, context menus, settings modal, and terminal.
 
 ---
 
@@ -116,14 +149,23 @@ npm run build:linux # Build for Linux
 | **Fix Code** | Fix code issues |
 | **Voice** | Voice input via Whisper ASR |
 
-### Build Targets
+### CI/CD — GitHub Actions
 
-| Platform | Format | Command |
-|---|---|---|
-| **Windows** | NSIS + Portable exe | `npm run build:win` |
-| **macOS** | DMG + ZIP | `npm run build:mac` |
-| **Linux** | AppImage + DEB | `npm run build:linux` |
-| **Quick Test** | Unpacked folder | `npm run build:dir` |
+All platforms are built automatically via GitHub Actions:
+
+```yaml
+# Trigger: push tags (v*) or manual workflow_dispatch
+# Builds: Windows (NSIS+Portable), macOS (DMG+ZIP), Linux (AppImage+DEB)
+# Artifacts uploaded per platform for download
+```
+
+To release a new version:
+```bash
+git tag v1.0.1
+git push --tags   # Triggers auto-build for Win/Mac/Linux
+```
+
+Or trigger manually: **Actions → Build & Release → Run workflow**
 
 ---
 
@@ -140,7 +182,9 @@ oh-my-opencode-dev/
 │       ├── index.html      # Main window UI
 │       ├── styles.css      # Theming system
 │       ├── app.js          # Application logic
+│       ├── i18n.js         # Internationalization (zh/en/ko)
 │       └── bubble.html     # Floating bubble + mini panel
+├── .github/workflows/      # CI/CD (GitHub Actions)
 ├── docs/                   # Documentation
 ├── packages/               # Platform binaries
 ├── bin/                    # CLI entry point
@@ -213,6 +257,19 @@ The open-source AI coding platform that makes all of this possible.
 - **[@junhoyeo](https://github.com/junhoyeo)** — For the amazing hero image in the original project
 - **[@sst](https://github.com/sst)** — For building and maintaining OpenCode
 - **The open-source community** — For continuous feedback and contributions
+
+---
+
+## Security
+
+All known vulnerabilities have been patched:
+
+| Package | Issue | Fix |
+|---|---|---|
+| `electron` | ASAR Integrity Bypass (Moderate) | Upgraded to **40.4.1** |
+| `node-tar` | Path Traversal, Symlink Poisoning, Race Condition (3× High) | Upgraded via `electron-builder@26.7.0` |
+
+`npm audit` → **0 vulnerabilities**
 
 ---
 
