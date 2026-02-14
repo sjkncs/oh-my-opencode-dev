@@ -27,6 +27,8 @@ let state = {
   Object.assign(state.settings, settings);
 
   applyTheme();
+  I18N.init(state.settings.language || 'zh');
+  if ($('#settingLanguage')) $('#settingLanguage').value = I18N.lang;
   $('#currentModel').textContent = state.settings.model;
   renderConversationList();
   if (state.activeId) loadConversation(state.activeId);
@@ -804,6 +806,15 @@ $('#settingsModal').addEventListener('click', (e) => {
 
 $('#settingOnTop').addEventListener('change', () => window.electronAPI.toggleAlwaysOnTop());
 
+// ── Language selector ──
+$('#settingLanguage').addEventListener('change', (e) => {
+  const lang = e.target.value;
+  I18N.lang = lang;
+  state.settings.language = lang;
+  saveSettings();
+  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : lang === 'ko' ? 'ko' : 'en';
+});
+
 // ── Load all settings into modal fields ──
 function loadAllSettingsUI() {
   const s = state.settings;
@@ -823,6 +834,8 @@ function loadAllSettingsUI() {
   $$('#sidebarSwatches .color-swatch').forEach(sw => {
     sw.classList.toggle('active', sw.dataset.sidebar === (s.sidebarColor || 'default'));
   });
+  // Language
+  if ($('#settingLanguage')) $('#settingLanguage').value = s.language || 'zh';
 }
 
 // ── API fields auto-save ──

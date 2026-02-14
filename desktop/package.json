@@ -15,8 +15,8 @@
   "author": "Oh My OpenCode",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^33.0.0",
-    "electron-builder": "^25.1.8"
+    "electron": "^40.4.1",
+    "electron-builder": "^26.7.0"
   },
   "dependencies": {
     "@opencode-ai/sdk": "^1.1.65"
